@@ -20,7 +20,6 @@
 # If a message was provided then display it; otherwise, say 'Hello World'.
 message = node.has_key?(:message) ? node[:message] : "Hello World"
 
-# config.ssh.username
 
 
 
@@ -45,13 +44,14 @@ unless ["FalseClass", "TrueClass"].include? yamlconfig['use_devel'].class.to_s
     raise "'use_devel' key  in config.yml has invalid value (must be TRUE or FALSE)!"
 end
 
+unless yamlconfig.has_key? "install_annotation_packages"
+    raise "no 'install_annotation_packages' key in config.yml!"
+end
 
-# CRAN_RSOURCE_TOPDIR="R-devel"
-# CRAN_TARBALL="$CRAN_RSOURCE_TOPDIR.tar.gz"
-# CRAN_TARBALL_URL="ftp://ftp.stat.math.ethz.ch/Software/R/$CRAN_TARBALL"
-#CRAN_RSOURCE_TOPDIR="R-3.1.0"
-#CRAN_TARBALL="R-3.1.0.tar.gz"
-#CRAN_TARBALL_URL="http://cran.r-project.org/src/base/R-3/$CRAN_TARBALL"
+unless ["FalseClass", "TrueClass"].include? yamlconfig['install_annotation_packages'].class.to_s
+    raise "'install_annotation_packages' key  in config.yml has invalid value (must be TRUE or FALSE)!"
+end
+
 
 r_version = yamlconfig["r_version"]
 tarball = "#{r_version}.tar.gz"
@@ -102,14 +102,14 @@ execute "untar R tarball" do
     cwd "/downloads"
     user "root"
     #rdir = "/downloads/#{r_version}"
-    not_if(File.exists?("/downloads/#{r_version}"))
+    not_if {File.exists?("/downloads/#{r_version}")}
 end
 
 execute "configure R" do
     command "./configure --enable-R-shlib"
     cwd "/downloads/#{r_version}"
     user "root"
-    not_if(File.exists?("/downloads/#{r_version}/config.log"))
+    not_if {File.exists?("/downloads/#{r_version}/config.log")}
     #not_if "tail -1 /downloads/#{r_version}/config.log|grep -q 'configure: exit 0'"
 end
 
@@ -117,22 +117,42 @@ execute "make R" do
     command "make -j > /downloads/R-make.out 2>&1"
     cwd "/downloads/#{r_version}"
     user "root"
-    not_if File.exists? "/downloads/#{r_version}/bin/R"
+    not_if {File.exists? "/downloads/#{r_version}/bin/R"}
 end
 
 execute "install R" do
     command "make install"
     cwd "/downloads/#{r_version}"
     user "root"
-    not_if File.exists? "/usr/local/bin/R"
+    not_if {File.exists? "/usr/local/bin/R"}
+end
+
+# if we're NOT on ec2...
+res = `curl -s http://169.254.169.254/latest/meta-data/`
+if res.empty?
+    mpi_packs = %w(libmpich2-3 libmpich2-dev libopenmpi-dev libopenmpi1.3 mpich2 openmpi-bin openmpi-checkpoint openmpi-common)
+    for mpi_pack in mpi_packs
+        package mpi_pack do
+            action :install
+        end
+    end    
+end
+
+# XML/RCurl prereqs
+%w(libcurl4-openssl-dev libxml2-dev).each do |pkg|
+    package pkg do
+        action :install
+    end
 end
 
 execute "install R packages" do
-    command "Rscript /vagrant/install.R"
-    environment({"USE_DEVEL" => yamlconfig['use_devel'].to_s.upcase})
+    command "Rscript /vagrant/install.R > /downloads/install-rpacks.out 2>&1"
+    environment({"USE_DEVEL" => yamlconfig['use_devel'].to_s.upcase,
+        "INSTALL_ANNOTATION_PACKAGES" =>
+        yamlconfig['install_annotation_packages'].to_s.upcase})
     user "root"
     # run always?
-    not_if 'ls /usr/local/lib/R/library| grep -q "^VariantAnnotation$"'
+    #not_if 'ls /usr/local/lib/R/library| grep -q "^VariantAnnotation$"'
 end
 
 # libdbi-perl libdbd-mysql-perl
