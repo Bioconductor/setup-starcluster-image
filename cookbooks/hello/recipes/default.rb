@@ -22,6 +22,8 @@ message = node.has_key?(:message) ? node[:message] : "Hello World"
 
 # config.ssh.username
 
+
+
 require 'yaml'
 
 configfile = "/vagrant/config.yml"
@@ -39,7 +41,7 @@ unless yamlconfig.has_key? "use_devel"
     raise "no 'use_devel' key in config.yml!"
 end
 
-unless [FalseClass, TrueClass].include? yamlconfig['use_devel'].class
+unless ["FalseClass", "TrueClass"].include? yamlconfig['use_devel'].class.to_s
     raise "'use_devel' key  in config.yml has invalid value (must be TRUE or FALSE)!"
 end
 
@@ -61,8 +63,16 @@ else
     tarball_url = "ftp://ftp.stat.math.ethz.ch/Software/R/#{tarball}"
 end
 
+directory "/downloads" do
+  owner "root"
+  group "root"
+  #mode 00644
+  mode "0755"
+  action :create
+end
 
-remote_file "/tmp/#{tarball}" do
+
+remote_file "/downloads/#{tarball}" do
     source tarball_url
 end
 
@@ -89,30 +99,30 @@ end
 
 execute "untar R tarball" do
     command "tar zxf #{tarball}"
-    cwd "/tmp"
+    cwd "/downloads"
     user "root"
-    rdir = "/tmp/#{r_version}"
-    not_if File.exists? rdir and File.directory? rdir
+    #rdir = "/downloads/#{r_version}"
+    not_if(File.exists?("/downloads/#{r_version}"))
 end
 
 execute "configure R" do
     command "./configure --enable-R-shlib"
-    cwd "/tmp/#{r_version}"
+    cwd "/downloads/#{r_version}"
     user "root"
-    only_if(!File.exists? "/tmp/#{r_version}/config.log")
-    #not_if "tail -1 /tmp/#{r_version}/config.log|grep -q 'configure: exit 0'"
+    not_if(File.exists?("/downloads/#{r_version}/config.log"))
+    #not_if "tail -1 /downloads/#{r_version}/config.log|grep -q 'configure: exit 0'"
 end
 
 execute "make R" do
-    command "make -j > /tmp/R-make.out 2>&1"
-    cwd "/tmp/#{r_version}"
+    command "make -j > /downloads/R-make.out 2>&1"
+    cwd "/downloads/#{r_version}"
     user "root"
-    not_if File.exists? "/tmp/#{r_version}/bin/R"
+    not_if File.exists? "/downloads/#{r_version}/bin/R"
 end
 
 execute "install R" do
     command "make install"
-    cwd "/tmp/#{r_version}"
+    cwd "/downloads/#{r_version}"
     user "root"
     not_if File.exists? "/usr/local/bin/R"
 end

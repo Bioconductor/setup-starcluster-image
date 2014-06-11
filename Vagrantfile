@@ -53,6 +53,25 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   #   vb.customize ["modifyvm", :id, "--memory", "1024"]
   # end
   #
+
+config.vm.provider "virtualbox" do |v|
+    v.memory = 1024
+    #v.cpus = 2
+end
+
+config.vm.provider "aws" do |aws, override|
+    override.vm.box = "dummy"
+    aws.access_key_id = "XXXXX"
+    aws.secret_access_key = "YYYYY"
+    aws.keypair_name = "bioc-default"
+    aws.security_groups = "bioc_default"
+    aws.ami = "ZZZZZ"
+
+    override.ssh.username = "ubuntu"
+    override.ssh.private_key_path = "/path/to/bioc-default.pem"
+end
+
+
   # View the documentation for the provider you're using for more
   # information on available options.
 
@@ -88,6 +107,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   #
 
   config.vm.provision "chef_solo" do |chef|
+    chef.log_level = :debug
     chef.add_recipe "hello"
   end
 
