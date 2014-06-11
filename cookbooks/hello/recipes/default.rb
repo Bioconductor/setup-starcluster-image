@@ -131,6 +131,7 @@ execute "install R packages" do
     command "Rscript /vagrant/install.R"
     environment({"USE_DEVEL" => yamlconfig['use_devel'].to_s.upcase})
     user "root"
+    # run always?
     not_if 'ls /usr/local/lib/R/library| grep -q "^VariantAnnotation$"'
 end
 

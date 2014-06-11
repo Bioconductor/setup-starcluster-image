@@ -8,7 +8,7 @@ if (Sys.getenv("USE_DEVEL") == "TRUE")
     useDevel()
 
 
-biocLite(c("affxparser", "affy", "affyio", "affylmGUI", "annaffy", "annotate",
+pkgs <- c("affxparser", "affy", "affyio", "affylmGUI", "annaffy", "annotate",
     "AnnotationDbi", "aroma.light", "BayesPeak", "baySeq", "Biobase", 
     "biomaRt", "Biostrings", "BSgenome", "Category", "ChIPpeakAnno",
     "chipseq", "ChIPseqR", "ChIPsim", "CSAR", "cummeRbund", "DESeq", "DEXSeq",
@@ -21,6 +21,15 @@ biocLite(c("affxparser", "affy", "affyio", "affylmGUI", "annaffy", "annotate",
     "Repitools", "rGADEM", "Rgraphviz", "Ringo", "Rolexa", "Rsamtools",
     "Rsubread", "rtracklayer", "segmentSeq", "seqbias", "seqLogo", "ShortRead",
     "snpStats", "splots", "SRAdb", "tkWidgets", "VariantAnnotation", "vsn",
-    "widgetTools", "zlibbioc"))
+    "widgetTools", "zlibbioc")
+
+ip <- rownames(installed.packages())
+for (pkg in pkgs)
+{
+    if (!pkg %in% ip)
+        biocLite(pkg)
+}
+
+biocLite()
 
 #Rmpi, BiocParallel, BatchJobs
