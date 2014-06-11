@@ -198,7 +198,98 @@ execute "install vep" do
     not_if {File.exists? "/usr/local/variant_effect_predictor/vep_is_installed"}
 end
 
+# # install some gems
+# %w(nokogiri pry pry-doc pry-nav).each do |gem|
+#     chef_gem gem do
+#         action :install
+#         options("--no-ri --no-rdoc")
+#     end
+# end
+
+# execute "install some gems" do
+#     command "gem install --no-ri --no-rdoc pry pry-nav pry-doc"
+#     user "root"
+#     not_if 'gem list|grep -q "^pry "'
+# end
+
+
+# require 'nokogiri'
 
 # install rstudio server
+
+%w(gdebi-core libapparmor1).each do |pkg|
+    package pkg do
+        action :install
+    end
+end
+
+remote_file "/downloads/rstudio.html" do
+    source "http://www.rstudio.com/products/rstudio/download-server/"
+end
+
+lines = File.readlines("/downloads/rstudio.html")
+count = 0
+for line in lines
+  if line =~ /<strong>64bit<\/strong><br \/>/
+    break
+  else
+    count += 1
+  end
+end
+
+version = nil
+for i in count..lines.length
+  line = lines[i]
+  if line =~ /^Version:/
+    #lala
+    version = line.split(" ")[1].split("<").first.strip
+    encoding_options = {:invalid => :replace,
+        :undef => :replace, :replace => '', :universal_newline => true}
+    version = version.encode(Encoding.find('ASCII'), encoding_options)
+    # puts "HOKUM version: .#{version}."
+    # version.each_byte do |c|
+    #     puts c
+    # end
+    break
+  end
+end
+
+raise "couldn't get rstudio server version" if version.nil?
+
+url = "http://download2.rstudio.org/rstudio-server-#{version}-amd64.deb"
+
+puts "version: .#{version}., url: .#{url}."
+
+debfile = url.split("/").last
+
+remote_file "/downloads/#{debfile}" do
+    source url
+end
+
+dpkg = `dpkg -s rstudio-server`
+need_install = dpkg.empty?
+unless need_install
+    installed_version = dpkg.split("\n").find{|i| i=~ /^Version/}.split(" ").last
+    need_install = (installed_version != version)
+end
+
+execute "install rstudio-server" do
+    command "gdebi -n #{debfile}"
+    user "root"
+    cwd "/downloads"
+    only_if {need_install}
+end
+
+username = nil
+["vagrant", "ubuntu"].each do |user|
+    res = `grep "^#{user}" /etc/passwd`
+    username = user unless res.empty?
+end
+
+execute "change #{username} password" do
+    command "echo #{username}:bioc | chpasswd"
+    user "root"
+    # fixme guard this somehow?
+end
 
 # clear history....

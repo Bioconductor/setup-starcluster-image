@@ -54,12 +54,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # end
   #
 
-config.vm.provider "virtualbox" do |v|
+config.vm.provider "virtualbox" do |v, override|
+    override.vm.network "forwarded_port", guest: 8787, host: 8788
     v.memory = 1024
     #v.cpus = 2
 end
 
 config.vm.provider "aws" do |aws, override|
+    # security group should provide access to port 8787
     override.vm.box = "dummy"
     aws.access_key_id = "XXXXX"
     aws.secret_access_key = "YYYYY"
