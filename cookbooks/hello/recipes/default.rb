@@ -155,7 +155,49 @@ execute "install R packages" do
     #not_if 'ls /usr/local/lib/R/library| grep -q "^VariantAnnotation$"'
 end
 
-# libdbi-perl libdbd-mysql-perl
+# ensemblVEP deps
+%w(libdbi-perl libdbd-mysql-perl libarchive-zip-perl).each do |pkg|
+    package pkg do
+        action :install
+    end
+end
+
+maxVep = `echo "cat(unname(unlist(ensemblVEP::currentVEP())))"|R --slave`
+vepUrl = "https://codeload.github.com/Ensembl/ensembl-tools/zip/release/#{maxVep}"
+vepZip = "ensembl-tools-release-#{maxVep}.zip"
+vepDir = vepZip.sub(".zip", "")
+
+remote_file "/downloads/#{vepZip}" do
+    source vepUrl
+end
+
+execute "unzip vep" do
+    command "unzip #{vepZip}"
+    user "root"
+    cwd "/downloads"
+    not_if {File.exists? "/downloads/#{vepDir}"}
+end
+
+execute "rename vep" do
+    command "mv variant_effect_predictor /usr/local"
+    user "root"
+    cwd "/downloads/#{vepDir}/scripts"
+    not_if {File.exists? "/usr/local/variant_effect_predictor"}
+end
+
+execute "add vep to path" do
+    command "echo 'export PATH=$PATH:/usr/local/variant_effect_predictor' >> /etc/profile"
+    user "root"
+    not_if "grep -q variant_effect_predictor /etc/profile"
+end
+
+execute "install vep" do
+    command "perl INSTALL.pl -a a && touch vep_is_installed"
+    cwd "/usr/local/variant_effect_predictor"
+    user "root"
+    not_if {File.exists? "/usr/local/variant_effect_predictor/vep_is_installed"}
+end
+
 
 # install rstudio server
 
