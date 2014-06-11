@@ -202,7 +202,7 @@ execute "add vep to Renviron.site path" do
     command "echo 'PATH=${PATH}:/usr/local/variant_effect_predictor' > Renviron.site"
     user "root"
     cwd "/usr/local/lib/R/etc"
-    not_if {File.exists? "Renviron.site"}
+    not_if {File.exists? "/usr/local/lib/R/etc/Renviron.site"}
 end
 
 
