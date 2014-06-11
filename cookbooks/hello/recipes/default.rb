@@ -52,6 +52,12 @@ unless ["FalseClass", "TrueClass"].include? yamlconfig['install_annotation_packa
     raise "'install_annotation_packages' key  in config.yml has invalid value (must be TRUE or FALSE)!"
 end
 
+username = nil
+["vagrant", "ubuntu"].each do |user|
+    res = `grep "^#{user}" /etc/passwd`
+    username = user unless res.empty?
+end
+
 
 r_version = yamlconfig["r_version"]
 tarball = "#{r_version}.tar.gz"
@@ -191,6 +197,16 @@ execute "add vep to path" do
     not_if "grep -q variant_effect_predictor /etc/profile"
 end
 
+# needed for Rstudio (server)
+execute "add vep to Renviron.site path" do
+    command "echo 'PATH=${PATH}:/usr/local/variant_effect_predictor' > Renviron.site"
+    user "root"
+    cwd "/usr/local/lib/R/etc"
+    not_if {File.exists? "Renviron.site"}
+end
+
+
+
 execute "install vep" do
     command "perl INSTALL.pl -a a && touch vep_is_installed"
     cwd "/usr/local/variant_effect_predictor"
@@ -280,11 +296,6 @@ execute "install rstudio-server" do
     only_if {need_install}
 end
 
-username = nil
-["vagrant", "ubuntu"].each do |user|
-    res = `grep "^#{user}" /etc/passwd`
-    username = user unless res.empty?
-end
 
 execute "change #{username} password" do
     command "echo #{username}:bioc | chpasswd"
