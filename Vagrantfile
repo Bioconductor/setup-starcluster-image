@@ -1,6 +1,8 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+require 'yaml'
+
 # Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
 VAGRANTFILE_API_VERSION = "2"
 
@@ -54,6 +56,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # end
   #
 
+yamlconfig = YAML.load_file "config.yml"
+
 config.vm.provider "virtualbox" do |v, override|
     override.vm.network "forwarded_port", guest: 8787, host: 8788
     v.memory = 1024
@@ -63,14 +67,15 @@ end
 config.vm.provider "aws" do |aws, override|
     # security group should provide access to port 8787
     override.vm.box = "dummy"
-    aws.access_key_id = "XXXXX"
-    aws.secret_access_key = "YYYYY"
-    aws.keypair_name = "bioc-default"
-    aws.security_groups = "bioc_default"
-    aws.ami = "ZZZZZ"
+    aws.access_key_id = yamlconfig['access_key_id']
+    aws.secret_access_key = yamlconfig['secret_access_key']
+    aws.keypair_name = yamlconfig['keypair_name']
+    aws.security_groups = yamlconfig['security_groups']
+    aws.ami = yamlconfig['ami']
+    aws.instance_type = yamlconfig['instance_type']
 
     override.ssh.username = "ubuntu"
-    override.ssh.private_key_path = "/path/to/bioc-default.pem"
+    override.ssh.private_key_path = yamlconfig['private_key_path']
 end
 
 

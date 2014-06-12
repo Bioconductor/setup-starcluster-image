@@ -1,3 +1,4 @@
+# don't overwrite config.yml!
 ---
 # r_version should be a string like  R-x.y.z  (example:  R-3.1.0), or one of the following:
 # R-devel R-alpha R-beta R-patched R-rc 
@@ -6,3 +7,15 @@ r_version: R-3.1.0
 use_devel: FALSE
 # TRUE to install 20GB of annotation pkgs (org/BSgenome/PolyPhen/SIFT/TxDb)
 install_annotation_packages: FALSE
+
+## AWS section:
+# see https://github.com/mitchellh/vagrant-aws/#quick-start
+access_key_id:  "XXXXX"
+secret_access_key:  "YYYYY"
+keypair_name:  "bioc-default"
+security_groups:  "bioc_default"
+ami:  "ami-ZZZZZ"
+private_key_path:  "/path/to/bioc-default.pem"
+instance_type:  "m1.large"
+
+# don't overwrite config.yml!
