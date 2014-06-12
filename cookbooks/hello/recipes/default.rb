@@ -1,28 +1,3 @@
-#
-# Cookbook Name:: helloworld
-# Recipe:: default
-#
-# Copyright 2012, Jonathan Klinginsmith
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-
-# If a message was provided then display it; otherwise, say 'Hello World'.
-message = node.has_key?(:message) ? node[:message] : "Hello World"
-
-
-
-
 require 'yaml'
 
 configfile = "/vagrant/config.yml"
@@ -82,11 +57,6 @@ remote_file "/downloads/#{tarball}" do
     source tarball_url
 end
 
-execute "echo message" do
-  command "echo '#{message}'"
-  #command "touch /home/vagrant/futz"
-  action :run
-end
 
 execute "apt-get update" do
   command "apt-get update"
@@ -168,51 +138,96 @@ end
     end
 end
 
-maxVep = `echo "cat(unname(unlist(ensemblVEP::currentVEP())))"|R --slave`
-vepUrl = "https://codeload.github.com/Ensembl/ensembl-tools/zip/release/#{maxVep}"
-vepZip = "ensembl-tools-release-#{maxVep}.zip"
-vepDir = vepZip.sub(".zip", "")
+ruby_block "set up VEP" do
+    block do
+        maxVep = `echo "cat(unname(unlist(ensemblVEP::currentVEP())))"|R --slave`
+        vepUrl = "https://codeload.github.com/Ensembl/ensembl-tools/zip/release/#{maxVep}"
+        vepZip = "ensembl-tools-release-#{maxVep}.zip"
+        vepDir = vepZip.sub(".zip", "")
 
-remote_file "/downloads/#{vepZip}" do
-    source vepUrl
+        rf = Chef::Resource::RemoteFile.new "/downloads/#{vepZip}", run_context
+        rf.source vepUrl
+        rf.run_action :create_if_missing
+
+        ex = Chef::Resource::Execute.new "unzip vep", run_context
+        ex.command  "unzip #{vepZip}"
+        ex.user "root"
+        ex.cwd "/downloads"
+        ex.not_if {File.exists? "/downloads/#{vepDir}"}
+        ex.run_action :run
+
+        ex = Chef::Resource::Execute.new "rename vep", run_context
+        ex.command "mv variant_effect_predictor /usr/local"
+        ex.user "root"
+        ex.cwd "/downloads/#{vepDir}/scripts"
+        ex.not_if {File.exists? "/usr/local/variant_effect_predictor"}
+        ex.run_action :run
+
+        ex = Chef::Resource::Execute.new "add vep to path", run_context
+        ex.command "echo 'export PATH=$PATH:/usr/local/variant_effect_predictor' >> /etc/profile" 
+        ex.user "root"
+        ex.not_if "grep -q variant_effect_predictor /etc/profile"
+        ex.run_action :run
+
+        ex = Chef::Resource::Execute.new "add vep to Renviron.site path", run_context
+        ex.command "echo 'PATH=${PATH}:/usr/local/variant_effect_predictor' > Renviron.site"
+        ex.user "root"
+        ex.cwd "/usr/local/lib/R/etc"
+        ex.not_if {File.exists? "/usr/local/lib/R/etc/Renviron.site"}
+        ex.run_action :run
+
+        ex = Chef::Resource::Execute.new "install vep", run_context
+        ex.command "perl INSTALL.pl -a a && touch vep_is_installed"
+        ex.cwd "/usr/local/variant_effect_predictor"
+        ex.user "root"
+        ex.not_if {File.exists? "/usr/local/variant_effect_predictor/vep_is_installed"}
+        ex.run_action :run
+
+    end
+    action :create
 end
 
-execute "unzip vep" do
-    command "unzip #{vepZip}"
-    user "root"
-    cwd "/downloads"
-    not_if {File.exists? "/downloads/#{vepDir}"}
-end
 
-execute "rename vep" do
-    command "mv variant_effect_predictor /usr/local"
-    user "root"
-    cwd "/downloads/#{vepDir}/scripts"
-    not_if {File.exists? "/usr/local/variant_effect_predictor"}
-end
+# remote_file "/downloads/#{vepZip}" do
+#     source vepUrl
+# end
 
-execute "add vep to path" do
-    command "echo 'export PATH=$PATH:/usr/local/variant_effect_predictor' >> /etc/profile"
-    user "root"
-    not_if "grep -q variant_effect_predictor /etc/profile"
-end
+# execute "unzip vep" do
+#     command "unzip #{vepZip}"
+#     user "root"
+#     cwd "/downloads"
+#     not_if {File.exists? "/downloads/#{vepDir}"}
+# end
+
+# execute "rename vep" do
+#     command "mv variant_effect_predictor /usr/local"
+#     user "root"
+#     cwd "/downloads/#{vepDir}/scripts"
+#     not_if {File.exists? "/usr/local/variant_effect_predictor"}
+# end
+
+# execute "add vep to path" do
+#     command "echo 'export PATH=$PATH:/usr/local/variant_effect_predictor' >> /etc/profile"
+#     user "root"
+#     not_if "grep -q variant_effect_predictor /etc/profile"
+# end
 
 # needed for Rstudio (server)
-execute "add vep to Renviron.site path" do
-    command "echo 'PATH=${PATH}:/usr/local/variant_effect_predictor' > Renviron.site"
-    user "root"
-    cwd "/usr/local/lib/R/etc"
-    not_if {File.exists? "/usr/local/lib/R/etc/Renviron.site"}
-end
+# execute "add vep to Renviron.site path" do
+#     command "echo 'PATH=${PATH}:/usr/local/variant_effect_predictor' > Renviron.site"
+#     user "root"
+#     cwd "/usr/local/lib/R/etc"
+#     not_if {File.exists? "/usr/local/lib/R/etc/Renviron.site"}
+# end
 
 
 
-execute "install vep" do
-    command "perl INSTALL.pl -a a && touch vep_is_installed"
-    cwd "/usr/local/variant_effect_predictor"
-    user "root"
-    not_if {File.exists? "/usr/local/variant_effect_predictor/vep_is_installed"}
-end
+# execute "install vep" do
+#     command "perl INSTALL.pl -a a && touch vep_is_installed"
+#     cwd "/usr/local/variant_effect_predictor"
+#     user "root"
+#     not_if {File.exists? "/usr/local/variant_effect_predictor/vep_is_installed"}
+# end
 
 # # install some gems
 # %w(nokogiri pry pry-doc pry-nav).each do |gem|
@@ -233,6 +248,7 @@ end
 
 # install rstudio server
 
+
 %w(gdebi-core libapparmor1).each do |pkg|
     package pkg do
         action :install
@@ -243,58 +259,85 @@ remote_file "/downloads/rstudio.html" do
     source "http://www.rstudio.com/products/rstudio/download-server/"
 end
 
-lines = File.readlines("/downloads/rstudio.html")
-count = 0
-for line in lines
-  if line =~ /<strong>64bit<\/strong><br \/>/
-    break
-  else
-    count += 1
-  end
+ruby_block "install rstudio server" do
+    block do
+
+        lines = File.readlines("/downloads/rstudio.html")
+        count = 0
+        for line in lines
+          if line =~ /<strong>64bit<\/strong><br \/>/
+            break
+          else
+            count += 1
+          end
+        end
+
+        version = nil
+        for i in count..lines.length
+          line = lines[i]
+          if line =~ /^Version:/
+            #lala
+            version = line.split(" ")[1].split("<").first.strip
+            encoding_options = {:invalid => :replace,
+                :undef => :replace, :replace => '', :universal_newline => true}
+            version = version.encode(Encoding.find('ASCII'), encoding_options)
+            # puts "HOKUM version: .#{version}."
+            # version.each_byte do |c|
+            #     puts c
+            # end
+            break
+          end
+        end
+
+        raise "couldn't get rstudio server version" if version.nil?
+
+        url = "http://download2.rstudio.org/rstudio-server-#{version}-amd64.deb"
+
+        puts "version: .#{version}., url: .#{url}."
+
+        debfile = url.split("/").last
+
+        rf = Chef::Resource::RemoteFile.new "/downloads/#{debfile}", run_context
+        rf.source url
+        rf.run_action :create_if_missing
+
+        ex = Chef::Resource::Execute.new "install rstudio .deb file", run_context
+        ex.command "gdebi -n #{debfile}"
+        ex.user "root"  
+        ex.cwd "/downloads"
+        ex.only_if do
+            dpkg = `dpkg -s rstudio-server`
+            need_install = dpkg.empty?
+            unless need_install
+                installed_version = dpkg.split("\n").find{|i| i=~ /^Version/}.split(" ").last
+                need_install = (installed_version != version)
+            end
+            need_install
+        end
+        ex.run_action :run
+
+    end
+    action :create
 end
 
-version = nil
-for i in count..lines.length
-  line = lines[i]
-  if line =~ /^Version:/
-    #lala
-    version = line.split(" ")[1].split("<").first.strip
-    encoding_options = {:invalid => :replace,
-        :undef => :replace, :replace => '', :universal_newline => true}
-    version = version.encode(Encoding.find('ASCII'), encoding_options)
-    # puts "HOKUM version: .#{version}."
-    # version.each_byte do |c|
-    #     puts c
-    # end
-    break
-  end
-end
 
-raise "couldn't get rstudio server version" if version.nil?
+# remote_file "/downloads/#{debfile}" do
+#     source url
+# end
 
-url = "http://download2.rstudio.org/rstudio-server-#{version}-amd64.deb"
+# dpkg = `dpkg -s rstudio-server`
+# need_install = dpkg.empty?
+# unless need_install
+#     installed_version = dpkg.split("\n").find{|i| i=~ /^Version/}.split(" ").last
+#     need_install = (installed_version != version)
+# end
 
-puts "version: .#{version}., url: .#{url}."
-
-debfile = url.split("/").last
-
-remote_file "/downloads/#{debfile}" do
-    source url
-end
-
-dpkg = `dpkg -s rstudio-server`
-need_install = dpkg.empty?
-unless need_install
-    installed_version = dpkg.split("\n").find{|i| i=~ /^Version/}.split(" ").last
-    need_install = (installed_version != version)
-end
-
-execute "install rstudio-server" do
-    command "gdebi -n #{debfile}"
-    user "root"
-    cwd "/downloads"
-    only_if {need_install}
-end
+# execute "install rstudio-server" do
+#     command "gdebi -n #{debfile}"
+#     user "root"
+#     cwd "/downloads"
+#     only_if {need_install}
+# end
 
 
 execute "change #{username} password" do
