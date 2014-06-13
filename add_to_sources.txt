@@ -1,0 +1,3 @@
+deb http://us.archive.ubuntu.com/ubuntu raring main multiverse universe
+deb http://us.archive.ubuntu.com/ubuntu raring-security main multiverse universe
+deb http://us.archive.ubuntu.com/ubuntu raring-updates main multiverse universe

@@ -81,6 +81,42 @@ execute "untar R tarball" do
     not_if {File.exists?("/downloads/#{r_version}")}
 end
 
+
+on_ec2 = true
+# if we're NOT on ec2...
+res = `curl -s http://169.254.169.254/latest/meta-data/`
+if res.empty?
+    on_ec2 = false
+    mpi_packs = %w(libmpich2-3 libmpich2-dev libopenmpi-dev libopenmpi1.3 mpich2 openmpi-bin openmpi-checkpoint openmpi-common)
+    for mpi_pack in mpi_packs
+        package mpi_pack do
+            action :install
+        end
+    end    
+end
+
+if on_ec2
+    execute "add to sources" do
+        command "cat /vagrant/add_to_sources.txt >> /etc/apt/sources.list"
+        user "root"
+        not_if "grep -q 'deb http://us.archive.ubuntu.com/ubuntu raring main multiverse universe' /etc/apt/sources.list"
+        action :run
+    end
+
+    execute "apt-get update" do
+        command "apt-get update"
+        user "root"
+        action :run
+    end
+
+    %w(libreadline6-dev texlive-science biblatex texinfo
+        texlive-fonts-extra dvipng libpng12-dev).each do |pkg|
+        package pkg do
+            action :install
+        end
+    end        
+end
+
 execute "configure R" do
     command "./configure --enable-R-shlib"
     cwd "/downloads/#{r_version}"
@@ -103,16 +139,8 @@ execute "install R" do
     not_if {File.exists? "/usr/local/bin/R"}
 end
 
-# if we're NOT on ec2...
-res = `curl -s http://169.254.169.254/latest/meta-data/`
-if res.empty?
-    mpi_packs = %w(libmpich2-3 libmpich2-dev libopenmpi-dev libopenmpi1.3 mpich2 openmpi-bin openmpi-checkpoint openmpi-common)
-    for mpi_pack in mpi_packs
-        package mpi_pack do
-            action :install
-        end
-    end    
-end
+
+
 
 # XML/RCurl prereqs
 %w(libcurl4-openssl-dev libxml2-dev).each do |pkg|
