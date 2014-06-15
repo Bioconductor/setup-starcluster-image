@@ -73,6 +73,7 @@ config.vm.provider "aws" do |aws, override|
     aws.security_groups = yamlconfig['security_groups']
     aws.ami = yamlconfig['ami']
     aws.instance_type = yamlconfig['instance_type']
+    aws.tags = yamlconfig['tags']
 
     override.ssh.username = "ubuntu"
     override.ssh.private_key_path = yamlconfig['private_key_path']
