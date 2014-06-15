@@ -149,6 +149,12 @@ end
     end
 end
 
+execute "remove lock files" do
+    command "rm -rf /usr/local/lib/R/library/00LOCK*"
+    user "root"
+    only_if {File.exists? "/usr/local/lib/R/library"}
+end
+
 execute "install R packages" do
     command "Rscript /vagrant/install.R > /downloads/install-rpacks.out 2>&1"
     environment({"USE_DEVEL" => yamlconfig['use_devel'].to_s.upcase,
