@@ -17,5 +17,7 @@ security_groups:  "bioc_default"
 ami:  "ami-ZZZZZ"
 private_key_path:  "/path/to/bioc-default.pem"
 instance_type:  "m1.large"
+tags: {Name: some name}
+
 
 # don't overwrite config.yml!
