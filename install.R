@@ -5,7 +5,12 @@
 source("http://bioconductor.org/biocLite.R")
 
 if (Sys.getenv("USE_DEVEL") == "TRUE")
-    useDevel()
+{
+    if (packageVersion("BiocInstaller")$minor %% 2 == 0)
+    {
+        useDevel()
+    }
+}
 
 pkgs <- c("affxparser", "affy", "affyio", "affylmGUI", "annaffy", "annotate",
     "AnnotationDbi", "aroma.light", "BatchJobs", "BayesPeak", "baySeq", "Biobase", "BiocParallel",
