@@ -155,6 +155,7 @@ execute "install R packages" do
         "INSTALL_ANNOTATION_PACKAGES" =>
         yamlconfig['install_annotation_packages'].to_s.upcase})
     user "root"
+    timeout 10800
     # run always?
     #not_if 'ls /usr/local/lib/R/library| grep -q "^VariantAnnotation$"'
 end
