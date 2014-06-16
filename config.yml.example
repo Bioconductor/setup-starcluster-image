@@ -5,7 +5,7 @@
 r_version: R-3.1.0
 # use_devel should be TRUE or FALSE
 use_devel: FALSE
-# TRUE to install 20GB of annotation pkgs (org/BSgenome/PolyPhen/SIFT/TxDb)
+# TRUE to install many GB of annotation pkgs (org/BSgenome/PolyPhen/SIFT/TxDb)
 install_annotation_packages: FALSE
 
 ## AWS section:
