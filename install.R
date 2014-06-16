@@ -13,7 +13,8 @@ if (Sys.getenv("USE_DEVEL") == "TRUE")
 }
 
 pkgs <- c("affxparser", "affy", "affyio", "affylmGUI", "annaffy", "annotate",
-    "AnnotationDbi", "aroma.light", "BatchJobs", "BayesPeak", "baySeq", "Biobase", "BiocParallel",
+    "AnnotationDbi", "aroma.light", "BatchExperiments",  "BatchJobs", "BayesPeak",
+    "baySeq", "Biobase", "BiocParallel",
     "biomaRt", "Biostrings", "BSgenome", "Category", "ChIPpeakAnno",
     "chipseq", "ChIPseqR", "ChIPsim", "CSAR", "cummeRbund", "DESeq", "DEXSeq",
     "DiffBind", "DNAcopy", "DynDoc", "EDASeq", "edgeR", "ensemblVEP", "gage",
