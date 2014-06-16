@@ -374,7 +374,7 @@ end
 #     only_if {need_install}
 # end
 
-
+## HMM, this doesn't always work?
 execute "change #{username} password" do
     command "echo #{username}:bioc | chpasswd"
     user "root"
