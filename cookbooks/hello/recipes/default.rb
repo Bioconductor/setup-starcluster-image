@@ -381,4 +381,8 @@ execute "change #{username} password" do
     # fixme guard this somehow?
 end
 
+# FIXME:
+# remove ~/R.history
+# run clean_ami script
+
 # clear history....
