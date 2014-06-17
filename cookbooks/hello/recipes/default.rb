@@ -44,6 +44,22 @@ else
     tarball_url = "ftp://ftp.stat.math.ethz.ch/Software/R/#{tarball}"
 end
 
+
+# this doesn't work either, see
+# https://stackoverflow.com/questions/24253847/changed-password-for-ubuntu-user-does-not-survive-making-a-new-ami-from-instance
+user username do
+    action :modify
+    password "bioc"
+end
+
+## HMM, this doesn't always work?
+# execute "change #{username} password" do
+#     command "echo #{username}:bioc | chpasswd"
+#     user "root"
+#     # fixme guard this somehow?
+# end
+
+
 directory "/downloads" do
   owner "root"
   group "root"
@@ -374,22 +390,16 @@ end
 #     only_if {need_install}
 # end
 
-# this doesn't work either, see
-# https://stackoverflow.com/questions/24253847/changed-password-for-ubuntu-user-does-not-survive-making-a-new-ami-from-instance
-user username do
-    action :modify
-    password "bioc"
-end
-
-## HMM, this doesn't always work?
-# execute "change #{username} password" do
-#     command "echo #{username}:bioc | chpasswd"
-#     user "root"
-#     # fixme guard this somehow?
-# end
 
 # FIXME:
 # remove ~/R.history
+
+%w(.Rhistory, .bash_history).each do |file|
+    file "/home/#{username}/#{file}" do
+        action :delete
+    end
+end
+
 # run clean_ami script
 
 # clear history....
