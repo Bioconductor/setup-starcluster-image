@@ -45,19 +45,6 @@ else
 end
 
 
-# this doesn't work either, see
-# https://stackoverflow.com/questions/24253847/changed-password-for-ubuntu-user-does-not-survive-making-a-new-ami-from-instance
-user username do
-    action :modify
-    password "bioc"
-end
-
-## HMM, this doesn't always work?
-# execute "change #{username} password" do
-#     command "echo #{username}:bioc | chpasswd"
-#     user "root"
-#     # fixme guard this somehow?
-# end
 
 
 directory "/downloads" do
@@ -391,6 +378,48 @@ end
 # end
 
 
+
+
+## HMM, this doesn't always work?
+# execute "change #{username} password" do
+#     command "echo #{username}:bioc | chpasswd"
+#     user "root"
+#     # fixme guard this somehow?
+# end
+
+# this doesn't work either, see
+# https://stackoverflow.com/questions/24253847/changed-password-for-ubuntu-user-does-not-survive-making-a-new-ami-from-instance
+# user username do
+#     action :modify
+#     password "bioc"
+# end
+
+# What DOES work for the ubuntu password is the insecure
+# hack of adding this to root's crontab:
+# @reboot echo "ubuntu:bioc" | /usr/sbin/chpasswd > /tmp/chpasswd.result 2>&1
+
+# If you want to keep ubuntu's password a secret, DON'T USE THAT HACK!
+# Instead, figure out how to stop cloud-init from resetting ubuntu's
+# password.
+
+# will this work? 
+# http://airbladesoftware.com/notes/three-chef-gotchas/ says so.
+# cron 'my cron task' do
+#   minute  '@reboot'
+#   hour    ''
+#   day     ''
+#   month   ''
+#   weekday ''
+#   command "echo 'ubuntu:bioc' | /usr/sbin/chpasswd > /tmp/chpasswd.result 2>&1"
+#   user "root"
+# end
+
+# On the other hand, https://tickets.opscode.com/browse/CHEF-2816?focusedCommentId=35063&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-35063
+# says it will keep adding the job over and over again
+# (no idempotency). So I guess we need another solution using
+# execute or ruby_block.
+
+
 # FIXME:
 # remove ~/R.history
 
@@ -399,6 +428,9 @@ end
         action :delete
     end
 end
+
+
+
 
 # run clean_ami script
 
