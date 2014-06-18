@@ -58,6 +58,9 @@ It might be something like: `~/.ec2/mykeypairname.pem`.
 
 
 In the `[cluster smallcluster]` section, change `CLUSTER_SIZE` to whatever you want.
+Note that cluster size is the number of workers plus the master. So if you want
+two workers plus a master, enter 3.
+
 Change `NODE_IMAGE_ID` to  ami-4e817f26 for BioC 2.14, or ami-12817f7a for BioC 3.0.
 These IDs are subject to change. These AMIs are not public yet but after they are,
 the latest ID will be available via the AMI page on the website. 
