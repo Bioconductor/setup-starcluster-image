@@ -164,7 +164,7 @@ ssh node001 ls thisfile
 
 ## Using R
 
-Before starting R, create a file ~/.BatchJobs with these contents:
+Before loading the BiocParallel package, create a file ~/.BatchJobs with these contents:
 
 ```
 cluster.functions = makeClusterFunctionsSGE('simple.tmpl')  
