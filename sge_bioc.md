@@ -33,7 +33,15 @@ Then edit `~/.starcluster/config`.
 ## Editing the config file
 
 In the `[aws info]` section, fill in the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` values.
-If you don't have these, let me know. For `AWS_USER_ID`, put 555219204010.
+If you don't have these, log into
+[https://bioconductor.signin.aws.amazon.com/console](https://bioconductor.signin.aws.amazon.com/console)
+and then go to
+[https://console.aws.amazon.com/iam/home?region=us-east-1#users](https://console.aws.amazon.com/iam/home?region=us-east-1#users)
+
+Scroll down to your username and click it, then click Security Credentials and Manage Access Keys.
+
+For `AWS_USER_ID`, put 555219204010.
+
 
 If you have set up an EC2 keypair before, put its name and path in the "Defining EC2 Keypairs" section,
 or follow the instructions for creating a new keypair.
