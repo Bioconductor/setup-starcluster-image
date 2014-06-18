@@ -1,0 +1,1 @@
+@reboot echo "ubuntu:bioc" | /usr/sbin/chpasswd > /tmp/chpasswd.result 2>&1
