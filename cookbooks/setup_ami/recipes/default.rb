@@ -380,59 +380,21 @@ end
 
 
 
-## HMM, this doesn't always work?
-# execute "change #{username} password" do
-#     command "echo #{username}:bioc | chpasswd"
-#     user "root"
-#     # fixme guard this somehow?
-# end
-
-# this doesn't work either, see
-# https://stackoverflow.com/questions/24253847/changed-password-for-ubuntu-user-does-not-survive-making-a-new-ami-from-instance
-# user username do
-#     action :modify
-#     password "bioc"
-# end
-
-# What DOES work for the ubuntu password is the insecure
-# hack of adding this to root's crontab:
-# @reboot echo "ubuntu:bioc" | /usr/sbin/chpasswd > /tmp/chpasswd.result 2>&1
-
-# If you want to keep ubuntu's password a secret, DON'T USE THAT HACK!
-# Instead, figure out how to stop cloud-init from resetting ubuntu's
-# password.
-
-# will this work? 
-# http://airbladesoftware.com/notes/three-chef-gotchas/ says so.
-# cron 'my cron task' do
-#   minute  '@reboot'
-#   hour    ''
-#   day     ''
-#   month   ''
-#   weekday ''
-#   command "echo 'ubuntu:bioc' | /usr/sbin/chpasswd > /tmp/chpasswd.result 2>&1"
-#   user "root"
-# end
-
-# On the other hand, https://tickets.opscode.com/browse/CHEF-2816?focusedCommentId=35063&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-35063
-# says it will keep adding the job over and over again
-# (no idempotency). So I guess we need another solution using
-# execute or ruby_block.
-
 
 if on_ec2
-    execute "set ubuntu's password in cron" do
-        # this will remove any existing crontab entries,
-        # but there shouldn't be any.
-        command "cat /vagrant/crontab.txt| crontab -"
-        user "root"
-    end
-else
-    user username do
-        :modify
-        password "bioc"
+    execute "disable password lock in cloud.cfg" do
+        command %Q(sed -i.bak "s/lock_passwd: True/lock_passwd: False/" cloud.cfg)
+        user "root"   
+        cwd "/etc/cloud"     
+        not_if "grep -q 'lock_passwd: False' /etc/cloud/cloud.cfg"
     end
 end
+
+user username do
+    action :modify
+    password "bioc"
+end
+
 
 %w(.Rhistory, .bash_history).each do |file|
     file "/home/#{username}/#{file}" do
