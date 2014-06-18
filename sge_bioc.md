@@ -234,7 +234,7 @@ When you are done, be sure and
 starcluster terminate smallcluster
 ```
 
-To stop paying for cluster usage.
+(back on your local mahine) to stop paying for cluster usage.
 
 ## SSH Cluster
 
