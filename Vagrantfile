@@ -116,7 +116,7 @@ end
 
   config.vm.provision "chef_solo" do |chef|
     chef.log_level = :debug
-    chef.add_recipe "hello"
+    chef.add_recipe "setup_ami"
   end
 
   

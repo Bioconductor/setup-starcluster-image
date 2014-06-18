@@ -420,8 +420,19 @@ end
 # execute or ruby_block.
 
 
-# FIXME:
-# remove ~/R.history
+if on_ec2
+    execute "set ubuntu's password in cron" do
+        # this will remove any existing crontab entries,
+        # but there shouldn't be any.
+        command "cat /vagrant/crontab.txt| crontab -"
+        user "root"
+    end
+else
+    user username do
+        :modify
+        password "bioc"
+    end
+end
 
 %w(.Rhistory, .bash_history).each do |file|
     file "/home/#{username}/#{file}" do
