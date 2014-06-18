@@ -106,7 +106,8 @@ starcluster sshmaster --user=ubuntu smallcluster
 ```
 
 
-Or if RStudio is set up, you can get the master node's DNS name with:
+Or if RStudio is set up, you can get the master node's DNS name with (still
+on your local machine):
 
 ```
 starcluster listclusters
