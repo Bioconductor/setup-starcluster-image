@@ -99,6 +99,7 @@ if res.empty?
 end
 
 if on_ec2
+    # FIXME - remove dependence on version nickname (e.g. raring)
     execute "add to sources" do
         command "cat /vagrant/add_to_sources.txt >> /etc/apt/sources.list"
         user "root"
