@@ -68,6 +68,8 @@ the latest ID will be available via the AMI page on the website.
 Change the value of `KEYNAME` to the name of the keypair you'll be using (the
 name you gave the keypair when you added it to AWS).
 
+Change `CLUSTER_USER` to `ubuntu`.
+
 ## Using the cluster with RStudio
 
 If you want to use RStudio on the master node, add the following to the starcluster config
