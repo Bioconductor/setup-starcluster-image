@@ -403,8 +403,58 @@ end
     end
 end
 
+# FIXME make sure a user-accessible ruby is installed
+
+#sed -i.bak '/\/usr\/lib\/rstudio-server\/bin\/rsession\* ux/a      /usr/local/bin/tryit.sh* ux,' rstudio-server
 
 
+if on_ec2
+
+    directory "/usr/lib/rstudio-server/rss-writable" do
+        action :create
+        owner "rstudio-server"
+        group "rstudio-server"
+        mode "0755"
+    end
+
+    execute "set up rserver.conf file" do
+        command "echo 'rsession-path=/usr/local/bin/setup_r_mpi.sh' > rserver.conf"
+        cwd "/etc/rstudio"
+        user "root"
+        not_if {File.exists? "/etc/rstudio/rserver.conf"}
+    end
+
+    remote_file "/usr/local/bin/setup_r_mpi.sh" do
+        owner "root"
+        group "root"
+        mode "0755"
+        source "file:///vagrant/setup_r_mpi.sh"
+        action :create
+    end
+
+    execute "modify apparmor config" do
+        command %Q(sed -i.bak '/\/usr\/lib\/rstudio-server\/bin\/rsession\* ux/a      /usr/local/bin/setup_r_mpi.sh* ux,' rstudio-server
+     && rm rstudio-server.bak)
+        cwd "/etc/apparmor.d"
+        user "root"
+        not_if "grep -q setup_r_mpi /etc/apparmor.d/rstudio-server"
+    end
+
+    execute "restart apparmor" do
+        command "invoke-rc.d apparmor reload"
+        user "root"
+    end
+
+    execute "restart rstudio server" do
+        command "rstudio-server restart"
+        user "root"
+    end
+
+    execute "verify rstudio-server installation" do
+        command "rstudio-server verify-installation"
+    end
+
+end
 
 # run clean_ami script
 
