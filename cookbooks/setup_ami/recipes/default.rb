@@ -396,6 +396,16 @@ user username do
     password "bioc"
 end
 
+# ^^ that apparently does not always work (even though)
+# there is no indication in the log that it isn't working
+# so try this:
+
+execute "change password again" do
+    user "root"
+    command "echo ubuntu:bioc | /usr/sbin/chpasswd"
+    # always....
+end
+
 
 %w(.Rhistory, .bash_history).each do |file|
     file "/home/#{username}/#{file}" do
@@ -469,8 +479,8 @@ if on_ec2
 
     execute "switch rstudio-server to port 80" do
         user "root"
-        command "cat www-port=80 > /etc/rstudio/rserver.conf"
-        not_if {File.exists? "/etc/rstudio/rserver.conf"}
+        command "echo 'www-port=80' > /etc/rstudio/rserver.conf"
+        not_if "grep -q www-port /etc/rstudio/rserver.conf"
     end
 
     execute "restart rstudio server" do
