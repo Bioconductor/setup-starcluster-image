@@ -410,39 +410,67 @@ end
 
 if on_ec2
 
-    directory "/usr/lib/rstudio-server/rss-writable" do
-        action :create
-        owner "rstudio-server"
-        group "rstudio-server"
-        mode "0755"
+    # directory "/usr/lib/rstudio-server/rss-writable" do
+    #     action :create
+    #     owner "rstudio-server"
+    #     group "rstudio-server"
+    #     mode "0755"
+    # end
+
+    # execute "set up rserver.conf file" do
+    #     command "echo 'rsession-path=/usr/local/bin/setup_r_mpi.sh' > rserver.conf"
+    #     cwd "/etc/rstudio"
+    #     user "root"
+    #     not_if {File.exists? "/etc/rstudio/rserver.conf"}
+    # end
+
+    ["setup_r_mpi.sh", "restart-rss.sh"].each do |file|
+
+        file "/usr/local/bin/#{file}" do
+            action :delete
+        end
+
+        remote_file "/usr/local/bin/#{file}" do
+            owner "root"
+            group "root"
+            mode "0755"
+            source "file:///vagrant/#{file}"
+            action :create_if_missing
+        end
     end
 
-    execute "set up rserver.conf file" do
-        command "echo 'rsession-path=/usr/local/bin/setup_r_mpi.sh' > rserver.conf"
-        cwd "/etc/rstudio"
-        user "root"
-        not_if {File.exists? "/etc/rstudio/rserver.conf"}
+    # s2r = "/usr/lib/rstudio-server/bin/rsession/* ux"
+    # s2a = "     /usr/local/bin/setup_r_mpi.sh* ux,"
+    # execute "modify apparmor config" do
+    #     command %Q(mv rstudio-server rstudio-server.old && ruby -pe 'gsub("#{s2r}", "#{s2r}\n#{s2a}")' > rstudio-server && rm rstudio-server.old)
+    #     #command %Q(sed -i'' '\/usr\/lib\/rstudio-server\/bin\/rsession\* ux/a \\n     /usr/local/bin/setup_r_mpi.sh* ux,' rstudio-server)
+    #     cwd "/etc/apparmor.d"
+    #     user "root"
+    #     not_if "grep -q setup_r_mpi /etc/apparmor.d/rstudio-server"
+    # end
+
+    file "/etc/apparmor.d/rstudio-server" do
+        action :delete
     end
 
-    remote_file "/usr/local/bin/setup_r_mpi.sh" do
+    remote_file "/etc/apparmor.d/rstudio-server" do
         owner "root"
         group "root"
-        mode "0755"
-        source "file:///vagrant/setup_r_mpi.sh"
-        action :create
+        source "file:///vagrant/rstudio-server"
+        action :create_if_missing
+        mode "0644"
     end
 
-    execute "modify apparmor config" do
-        command %Q(sed -i.bak '/\/usr\/lib\/rstudio-server\/bin\/rsession\* ux/a      /usr/local/bin/setup_r_mpi.sh* ux,' rstudio-server
-     && rm rstudio-server.bak)
-        cwd "/etc/apparmor.d"
-        user "root"
-        not_if "grep -q setup_r_mpi /etc/apparmor.d/rstudio-server"
-    end
 
     execute "restart apparmor" do
         command "invoke-rc.d apparmor reload"
         user "root"
+    end
+
+    execute "switch rstudio-server to port 80" do
+        user "root"
+        command "cat www-port=80 > /etc/rstudio/rserver.conf"
+        not_if {File.exists? "/etc/rstudio/rserver.conf"}
     end
 
     execute "restart rstudio server" do
@@ -454,8 +482,39 @@ if on_ec2
         command "rstudio-server verify-installation"
     end
 
+
+    cron "rstudio_server_config" do
+        command "/usr/local/bin/restart-rss.sh >> /var/log/restart-rss.log 2>&1"
+        user "root"
+        # default is to run every minute
+        action :create
+    end
+
+    directory "/home/#{username}/.mpi" do
+        owner username
+        # group username (?)
+        action :create
+    end
+
+    [".BatchJobs.R", "simple.tmpl"].each do |file|
+        remote_file "/home/#{username}/.mpi/#{file}" do
+            owner username
+            source "file:///vagrant/#{file}"
+            mode "0644"
+        end
+    end
 end
 
-# run clean_ami script
+remote_file "/usr/local/bin/clean_ami" do
+    action :create_if_missing
+    owner "root"
+    group "root"
+    mode "0755"
+    source "file:///vagrant/clean_ami"
+end
 
-# clear history....
+execute "clean_ami" do
+    command "/usr/local/bin/clean_ami > /dev/null 2>&1"
+    user "root"
+end
+

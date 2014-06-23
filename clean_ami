@@ -1,0 +1,20 @@
+#!/bin/bash
+
+apt-get clean
+
+rm -rf /root/.bash_history /root/.cache /root/.viminfo /root/startup.log \
+  /usr/local/Rmpi/lastdeviceused /root/display.txt /root/xvfb.log \
+  /root/.subversion /usr/local/etc/hostfile.txt /usr/local/lib/R/etc/Renviron.site
+
+rm -rf /home/ubuntu/.bash_history /home/ubuntu/.sudo_as_admin_successful \
+  /home/ubuntu/.cache /home/ubuntu/.viminfo /home/ubuntu/.Rhistory \
+  /home/ubuntu/.rstudio /home/ubuntu/.subversion /home/ubuntu/.mpi_is_set_up
+
+#cp /etc/hosts.orig /etc/hosts
+
+#/usr/bin/manage-cloud-user.py --remove-all > /dev/null 2>&1
+
+history -c
+
+su -c "history -c" -s /bin/bash ubuntu
+
