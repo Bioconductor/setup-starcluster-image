@@ -104,6 +104,7 @@ if [[ $HOSTNAME =~ master$ ]] && [ ! -f /home/ubuntu/.mpi_is_set_up ] ; then
     done
     chmod 0644 $HOSTFILE
     echo "rsession-path=/usr/local/bin/setup_r_mpi.sh" >> /etc/rstudio/rserver.conf
+    ## FIXME--copy these files to ~root as well?
     cp /home/ubuntu/.mpi/.BatchJobs.R /home/ubuntu
     #mpirun -np 1 --hostfile $HOSTFILE /usr/lib/rstudio-server/bin/rsession "$@"
     echo 'PATH=${PATH}:/opt/sge6/bin/linux-x64' >> /usr/local/lib/R/etc/Renviron.site
