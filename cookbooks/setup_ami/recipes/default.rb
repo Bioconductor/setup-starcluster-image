@@ -402,7 +402,7 @@ end
 
 execute "change password again" do
     user "root"
-    command "echo ubuntu:bioc | /usr/sbin/chpasswd"
+    command "echo #{username}:bioc | /usr/sbin/chpasswd"
     # always....
 end
 
