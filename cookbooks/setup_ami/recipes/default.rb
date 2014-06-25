@@ -33,6 +33,9 @@ username = nil
     username = user unless res.empty?
 end
 
+lines = File.readlines("/etc/lsb-release")
+distrib_codename = lines.find{|i| i =~ /^DISTRIB_CODENAME/}.strip.split("=").last
+
 
 r_version = yamlconfig["r_version"]
 tarball = "#{r_version}.tar.gz"
@@ -99,11 +102,10 @@ if res.empty?
 end
 
 if on_ec2
-    # FIXME - remove dependence on version nickname (e.g. raring)
     execute "add to sources" do
-        command "cat /vagrant/add_to_sources.txt >> /etc/apt/sources.list"
+        command "cat /vagrant/add_to_sources.txt | sed s/raring/#{distrib_codename}/g>> /etc/apt/sources.list"
         user "root"
-        not_if "grep -q 'deb http://us.archive.ubuntu.com/ubuntu raring main multiverse universe' /etc/apt/sources.list"
+        not_if "grep -q 'deb http://us.archive.ubuntu.com/ubuntu #{distrib_codename} main multiverse universe' /etc/apt/sources.list"
         action :run
     end
 
