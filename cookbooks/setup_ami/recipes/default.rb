@@ -116,7 +116,7 @@ if on_ec2
     end
 
     %w(libreadline6-dev texlive-science biblatex texinfo
-        texlive-fonts-extra dvipng libpng12-dev).each do |pkg|
+        texlive-fonts-extra dvipng libpng12-dev libpango1.0-dev).each do |pkg|
         package pkg do
             action :install
         end
@@ -124,7 +124,7 @@ if on_ec2
 end
 
 execute "configure R" do
-    command "./configure --enable-R-shlib"
+    command "./configure --enable-R-shlib --with-cairo=yes"
     cwd "/downloads/#{r_version}"
     user "root"
     not_if {File.exists?("/downloads/#{r_version}/config.log")}
