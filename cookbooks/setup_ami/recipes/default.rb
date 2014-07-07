@@ -73,7 +73,7 @@ end
 
 
 execute "install R build deps" do
-  command "apt-get build-dep -y r-base"
+  command "apt-get build-dep -y r-base-dev"
   user "root"
   action :run
   not_if 'dpkg --get-selections|grep -q "^xvfb\s"'
