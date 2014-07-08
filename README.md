@@ -18,3 +18,8 @@ You'll need Vagrant installed in order to use this.
 To use, copy config.yml.example to config.yml and edit
 config.yml to taste. If you are creating an Amazon AMI
 you'll need the AWS plugin for Vagrant.
+
+These scripts are designed for creating a machine
+from scratch. If you want to modify an existing AMI,
+it is much simpler to follow the instructions
+[here](http://www.bioconductor.org/help/bioconductor-cloud-ami/#custom).
