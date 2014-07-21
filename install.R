@@ -23,8 +23,11 @@ pkgs <- c("affxparser", "affy", "affyio", "affylmGUI", "annaffy", "annotate",
     "GGtools", "girafe", "goseq", "GOstats", "graph", "GSEABase", "HilbertVis",
     "impute", "IRanges", "limma", "MEDIPS", "multtest", "oneChannelGUI", "PAnnBuilder",
     "preprocessCore", "qpgraph", "qrqc", "R453Plus1Toolbox", "RBGL",
-    "Repitools", "rGADEM", "Rgraphviz", "Ringo", "Rmpi", "Rolexa", "Rsamtools",
+    "Repitools", "rGADEM", "Rgraphviz", "Ringo", "Rmpi", "Rolexa", 
+    "RNAseqData.HNRNPC.bam.chr14",
+    "Rsamtools",
     "Rsubread", "rtracklayer", "segmentSeq", "seqbias", "seqLogo", "ShortRead",
+    "snow",
     "snpStats", "splots", "SRAdb", "tkWidgets", "VariantAnnotation", "vsn",
     "widgetTools", "zlibbioc")
 

@@ -72,7 +72,7 @@ execute "apt-get update" do
 end
 
 
-execute "install R build deps" do
+execute "install R (dev) build deps" do
   command "apt-get build-dep -y r-base-dev"
   user "root"
   action :run
