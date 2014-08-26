@@ -525,6 +525,24 @@ remote_file "/usr/local/bin/clean_ami" do
     source "file:///vagrant/clean_ami"
 end
 
+
+
+remote_file "/etc/motd" do
+    action :create
+    owner "root"
+    group "root"
+    mode "0755"
+    source "file:///vagrant/motd"
+end
+
+remote_file "/home/ubuntu/.Rprofile" do
+    action :create
+    owner username
+    group username
+    mode "0755"
+    source "file:///vagrant/.Rprofile"
+end
+
 execute "clean_ami" do
     command "/usr/local/bin/clean_ami > /dev/null 2>&1"
     user "root"
