@@ -543,6 +543,15 @@ remote_file "/home/ubuntu/.Rprofile" do
     source "file:///vagrant/.Rprofile"
 end
 
+remote_file "/etc/init/phone-home.conf" do
+    action :create
+    owner "root"
+    group "root"
+    mode "0755"
+    source "file:///vagrant/phone-home.conf"
+end
+
+
 execute "clean_ami" do
     command "/usr/local/bin/clean_ami > /dev/null 2>&1"
     user "root"
