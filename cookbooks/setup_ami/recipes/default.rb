@@ -527,12 +527,12 @@ end
 
 
 
-remote_file "/etc/motd" do
+remote_file "/etc/update-motd.d/999-bioc-phone-home" do
     action :create
     owner "root"
     group "root"
     mode "0755"
-    source "file:///vagrant/motd"
+    source "file:///vagrant/999-bioc-phone-home"
 end
 
 remote_file "/home/ubuntu/.Rprofile" do
