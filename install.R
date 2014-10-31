@@ -22,15 +22,16 @@ pkgs <- c("affxparser", "affy", "affyio", "affylmGUI", "annaffy", "annotate",
     "genefilter", "geneplotter", "GenomeGraphs", "genomeIntervals",
     "GenomicFeatures", "GenomicRanges", "Genominator", "GEOquery", "GGBase",
     "GGtools", "girafe", "goseq", "GOstats", "graph", "GSEABase", "HilbertVis",
+    "htmltools",
     "impute", "IRanges", "limma", "MEDIPS", "multtest", "oneChannelGUI", "PAnnBuilder",
     "preprocessCore", "qpgraph", "qrqc", "R453Plus1Toolbox", "RBGL",
-    "Repitools", "rGADEM", "Rgraphviz", "Ringo", "Rmpi", "Rolexa", 
+    "Repitools", "rGADEM", "Rgraphviz", "Ringo", "rmarkdown", "Rmpi", "Rolexa", 
     "RNAseqData.HNRNPC.bam.chr14",
     "Rsamtools",
     "Rsubread", "rtracklayer", "segmentSeq", "seqbias", "seqLogo", "ShortRead",
     "snow",
     "snpStats", "splots", "SRAdb", "tkWidgets", "VariantAnnotation", "vsn",
-    "widgetTools", "zlibbioc")
+    "widgetTools", "yaml", "zlibbioc")
 
 ap <- rownames(available.packages(
     contrib.url(biocinstallRepos()['BioCann'], getOption("pkgType"))))
