@@ -47,7 +47,53 @@ else
     tarball_url = "ftp://ftp.stat.math.ethz.ch/Software/R/#{tarball}"
 end
 
+on_ec2 = true
+# if we're NOT on ec2...
+res = `curl -s http://169.254.169.254/latest/meta-data/`
+if res.empty?
+    on ec2 = false
+end
 
+## end config, start doing stuff 
+
+
+
+
+if on_ec2 # and running ubuntu 13.04...
+
+    execute "update apt sources" do
+        command "sed -i -e 's/archive.ubuntu.com\|security.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list"
+        user "root"        
+        action :run
+        # should probably guard this
+    end
+
+
+    execute "add to sources" do
+        command "cat /vagrant/add_to_sources.txt | sed s/raring/#{distrib_codename}/g>> /etc/apt/sources.list"
+        user "root"
+        not_if "grep -q 'deb http://us.archive.ubuntu.com/ubuntu #{distrib_codename} main multiverse universe' /etc/apt/sources.list"
+        action :run
+    end
+
+    execute "apt-get update" do
+        command "apt-get update"
+        user "root"
+        action :run
+    end
+
+
+end
+
+
+execute "apt-get update" do
+  # the sed should probably not be run unconditionally,
+  # but i got impatient
+  command "sed -i -e 's/archive.ubuntu.com\|security.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list && apt-get update"
+  user "root"
+  action :run
+  # how to guard?
+end
 
 
 directory "/downloads" do
@@ -64,11 +110,13 @@ remote_file "/downloads/#{tarball}" do
 end
 
 
-execute "apt-get update" do
-  command "apt-get update"
-  user "root"
-  action :run
-  # how to guard?
+unless on_ec2
+    mpi_packs = %w(libmpich2-3 libmpich2-dev libopenmpi-dev libopenmpi1.3 mpich2 openmpi-bin openmpi-checkpoint openmpi-common)
+    for mpi_pack in mpi_packs
+        package mpi_pack do
+            action :install
+        end
+    end    
 end
 
 
@@ -88,32 +136,8 @@ execute "untar R tarball" do
 end
 
 
-on_ec2 = true
-# if we're NOT on ec2...
-res = `curl -s http://169.254.169.254/latest/meta-data/`
-if res.empty?
-    on_ec2 = false
-    mpi_packs = %w(libmpich2-3 libmpich2-dev libopenmpi-dev libopenmpi1.3 mpich2 openmpi-bin openmpi-checkpoint openmpi-common)
-    for mpi_pack in mpi_packs
-        package mpi_pack do
-            action :install
-        end
-    end    
-end
 
 if on_ec2
-    execute "add to sources" do
-        command "cat /vagrant/add_to_sources.txt | sed s/raring/#{distrib_codename}/g>> /etc/apt/sources.list"
-        user "root"
-        not_if "grep -q 'deb http://us.archive.ubuntu.com/ubuntu #{distrib_codename} main multiverse universe' /etc/apt/sources.list"
-        action :run
-    end
-
-    execute "apt-get update" do
-        command "apt-get update"
-        user "root"
-        action :run
-    end
 
     %w(libreadline6-dev texlive-science biblatex texinfo
         texlive-fonts-extra dvipng libpng12-dev libpango1.0-dev).each do |pkg|

@@ -1,3 +1,15 @@
+
+
+# to run this with AWS, 
+# first list the starcluster AMI IDs:
+# starcluster listpublic
+# then choose one. launch an instance of it, expanding
+# its available space (to 100GB). Install chef as follows:
+# curl -L https://www.opscode.com/chef/install.sh | sudo bash
+# Then make a new AMI out of that and puts its ID in config.yml.
+# Then run this with 
+# vagrant up --provider aws
+
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
