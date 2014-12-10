@@ -576,6 +576,15 @@ remote_file "/etc/init/phone-home.conf" do
 end
 
 
+package "python-pip" do
+    :install
+end
+
+execute "install awscli" do
+    command "pip install -U awscli"
+    not_if "pip list|grep -q awscli"
+end
+
 execute "clean_ami" do
     command "/usr/local/bin/clean_ami > /dev/null 2>&1"
     user "root"
