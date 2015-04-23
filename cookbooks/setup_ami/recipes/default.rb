@@ -139,8 +139,8 @@ end
 
 if on_ec2
 
-    %w(libreadline6-dev texlive-science biblatex texinfo
-        texlive-fonts-extra dvipng libpng12-dev libpango1.0-dev).each do |pkg|
+    %w(libreadline6-dev texlive-science texinfo
+        texlive-fonts-extra dvipng libpng12-dev libpango1.0-dev shellinabox).each do |pkg|
         package pkg do
             action :install
         end
