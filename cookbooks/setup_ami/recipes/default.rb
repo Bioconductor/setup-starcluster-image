@@ -193,7 +193,7 @@ execute "install R packages" do
     user "root"
     timeout 21600
     # run always?
-    #not_if 'ls /usr/local/lib/R/library| grep -q "^VariantAnnotation$"'
+    not_if 'ls /usr/local/lib/R/library| grep -q "^VariantAnnotation$"'
 end
 
 # ensemblVEP deps
@@ -314,7 +314,7 @@ end
 # install rstudio server
 
 
-%w(gdebi-core libapparmor1).each do |pkg|
+%w(gdebi-core).each do |pkg|
     package pkg do
         action :install
     end
@@ -475,33 +475,6 @@ if on_ec2
         end
     end
 
-    # s2r = "/usr/lib/rstudio-server/bin/rsession/* ux"
-    # s2a = "     /usr/local/bin/setup_r_mpi.sh* ux,"
-    # execute "modify apparmor config" do
-    #     command %Q(mv rstudio-server rstudio-server.old && ruby -pe 'gsub("#{s2r}", "#{s2r}\n#{s2a}")' > rstudio-server && rm rstudio-server.old)
-    #     #command %Q(sed -i'' '\/usr\/lib\/rstudio-server\/bin\/rsession\* ux/a \\n     /usr/local/bin/setup_r_mpi.sh* ux,' rstudio-server)
-    #     cwd "/etc/apparmor.d"
-    #     user "root"
-    #     not_if "grep -q setup_r_mpi /etc/apparmor.d/rstudio-server"
-    # end
-
-    file "/etc/apparmor.d/rstudio-server" do
-        action :delete
-    end
-
-    remote_file "/etc/apparmor.d/rstudio-server" do
-        owner "root"
-        group "root"
-        source "file:///vagrant/rstudio-server"
-        action :create_if_missing
-        mode "0644"
-    end
-
-
-    execute "restart apparmor" do
-        command "invoke-rc.d apparmor reload"
-        user "root"
-    end
 
     execute "switch rstudio-server to port 80" do
         user "root"
@@ -583,6 +556,26 @@ end
 execute "install awscli" do
     command "pip install -U awscli"
     not_if "pip list|grep -q awscli"
+end
+
+execute "install docker" do
+    command "wget -qO- https://get.docker.com/ | sh"
+    not_if "dpkg --get-selections|grep -q docker"
+end
+
+execute "configure docker so no sudo required" do
+    command "usermod -aG docker ubuntu"
+    # should be ok to not-guard this....
+end
+
+execute "modify shellinabox config" do
+    command "sed -i.bak 's/--no-beep/--no-beep --disable-ssl/' /etc/default/shellinabox"
+    not_if "grep -q disable-ssl /etc/default/shellinabox"
+end
+
+execute "restart shellinabox" do
+    command "invoke-rc.d shellinabox restart"
+    # not sure how to guard this, nbd....
 end
 
 execute "clean_ami" do
