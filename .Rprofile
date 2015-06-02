@@ -1,3 +1,6 @@
+
+.libPaths(c("~/R-libs", .libPaths()))
+
 if(interactive())
 {
     message("For administrative and funding reasons, Bioconductor")

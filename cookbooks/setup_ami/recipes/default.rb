@@ -179,21 +179,29 @@ end
     end
 end
 
+
+directory "#{Dir.home(username)}/R-libs" do
+  owner username
+  action :create
+end
+
+
 execute "remove lock files" do
-    command "rm -rf /usr/local/lib/R/library/00LOCK*"
+    command "rm -rf #{Dir.home(username)}/R-libs/00LOCK*"
     user "root"
-    only_if {File.exists? "/usr/local/lib/R/library"}
+    only_if {File.exists? "#{Dir.home(username)}/R-libs"}
 end
 
 execute "install R packages" do
-    command "Rscript /vagrant/install.R > /downloads/install-rpacks.out 2>&1"
+    command "Rscript /vagrant/install.R > /tmp/install-rpacks.out 2>&1"
     environment({"USE_DEVEL" => yamlconfig['use_devel'].to_s.upcase,
         "INSTALL_ANNOTATION_PACKAGES" =>
-        yamlconfig['install_annotation_packages'].to_s.upcase})
-    user "root"
+        yamlconfig['install_annotation_packages'].to_s.upcase,
+        "R_LIBS_USER" => "#{Dir.home(username)}/R-libs"})
+    user username
     timeout 21600
     # run always?
-    not_if 'ls /usr/local/lib/R/library| grep -q "^VariantAnnotation$"'
+    not_if "ls #{Dir.home(username)}/R-libs| grep -q '^VariantAnnotation$'"
 end
 
 # ensemblVEP deps
@@ -205,7 +213,7 @@ end
 
 ruby_block "set up VEP" do
     block do
-        maxVep = `echo "cat(unname(unlist(ensemblVEP::currentVEP())))"|R --slave`
+        maxVep = `echo "cat(unname(unlist(ensemblVEP::currentVEP())))"|R_LIBS_USER=#{Dir.home(username)}/R-libs R --slave --vanilla`
         vepUrl = "https://codeload.github.com/Ensembl/ensembl-tools/zip/release/#{maxVep}"
         vepZip = "ensembl-tools-release-#{maxVep}.zip"
         vepDir = vepZip.sub(".zip", "")
@@ -522,6 +530,13 @@ remote_file "/usr/local/bin/clean_ami" do
     source "file:///vagrant/clean_ami"
 end
 
+remote_file "/home/ubuntu/.Rprofile" do
+    action :create
+    owner username
+    group username
+    mode "0755"
+    source "file:///vagrant/.Rprofile"
+end
 
 
 remote_file "/etc/update-motd.d/999-bioc-phone-home" do
@@ -532,13 +547,6 @@ remote_file "/etc/update-motd.d/999-bioc-phone-home" do
     source "file:///vagrant/999-bioc-phone-home"
 end
 
-remote_file "/home/ubuntu/.Rprofile" do
-    action :create
-    owner username
-    group username
-    mode "0755"
-    source "file:///vagrant/.Rprofile"
-end
 
 remote_file "/etc/init/phone-home.conf" do
     action :create
