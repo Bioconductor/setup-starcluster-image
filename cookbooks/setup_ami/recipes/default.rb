@@ -402,7 +402,7 @@ execute "add pandoc to path" do
 end
 
 execute "set up R_LIBS_USER" do
-    command "echo 'export R_LIBS_USER=/home/ubuntu/R-libs:/usr/local/lib/R/library ' >> /home/#{username}/.bashrc" 
+    command "echo 'export R_LIBS_USER=/home/ubuntu/R-libs:/usr/local/lib/R/library' >> /home/#{username}/.bashrc" 
     user username
     not_if "grep -q R_LIBS_USER /home/#{username}/.bashrc"
     action :run
