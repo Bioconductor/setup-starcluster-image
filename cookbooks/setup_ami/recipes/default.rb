@@ -386,6 +386,14 @@ ruby_block "install rstudio server" do
 end
 
 
+execute "add pandoc to path" do
+    command "echo 'export PATH=$PATH:/usr/lib/rstudio-server/bin/pandoc' >> /etc/profile" 
+    user "root"
+    not_if "grep -q pandoc /etc/profile"
+    action :run
+end
+
+
 # remote_file "/downloads/#{debfile}" do
 #     source url
 # end
