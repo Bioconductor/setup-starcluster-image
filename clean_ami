@@ -4,11 +4,13 @@ apt-get clean
 
 rm -rf /root/.bash_history /root/.cache /root/.viminfo /root/startup.log \
   /usr/local/Rmpi/lastdeviceused /root/display.txt /root/xvfb.log \
-  /root/.subversion /usr/local/etc/hostfile.txt /usr/local/lib/R/etc/Renviron.site
+  /root/.subversion /usr/local/etc/hostfile.txt /usr/local/lib/R/etc/Renviron.site \
+  /root/.aws
 
 rm -rf /home/ubuntu/.bash_history /home/ubuntu/.sudo_as_admin_successful \
   /home/ubuntu/.cache /home/ubuntu/.viminfo /home/ubuntu/.Rhistory \
-  /home/ubuntu/.rstudio /home/ubuntu/.subversion /home/ubuntu/.mpi_is_set_up
+  /home/ubuntu/.rstudio /home/ubuntu/.subversion /home/ubuntu/.mpi_is_set_up \
+  /home/ubuntu/.aws
 
 #cp /etc/hosts.orig /etc/hosts
 

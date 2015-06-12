@@ -139,8 +139,8 @@ end
 
 if on_ec2
 
-    %w(libreadline6-dev texlive-science biblatex texinfo
-        texlive-fonts-extra dvipng libpng12-dev libpango1.0-dev).each do |pkg|
+    %w(libreadline6-dev texlive-science texinfo
+        texlive-fonts-extra dvipng libpng12-dev libpango1.0-dev shellinabox).each do |pkg|
         package pkg do
             action :install
         end
@@ -179,21 +179,29 @@ end
     end
 end
 
+
+directory "#{Dir.home(username)}/R-libs" do
+  owner username
+  action :create
+end
+
+
 execute "remove lock files" do
-    command "rm -rf /usr/local/lib/R/library/00LOCK*"
+    command "rm -rf #{Dir.home(username)}/R-libs/00LOCK*"
     user "root"
-    only_if {File.exists? "/usr/local/lib/R/library"}
+    only_if {File.exists? "#{Dir.home(username)}/R-libs"}
 end
 
 execute "install R packages" do
-    command "Rscript /vagrant/install.R > /downloads/install-rpacks.out 2>&1"
+    command "Rscript /vagrant/install.R > /tmp/install-rpacks.out 2>&1"
     environment({"USE_DEVEL" => yamlconfig['use_devel'].to_s.upcase,
         "INSTALL_ANNOTATION_PACKAGES" =>
-        yamlconfig['install_annotation_packages'].to_s.upcase})
-    user "root"
+        yamlconfig['install_annotation_packages'].to_s.upcase,
+        "R_LIBS_USER" => "#{Dir.home(username)}/R-libs"})
+    user username
     timeout 21600
     # run always?
-    #not_if 'ls /usr/local/lib/R/library| grep -q "^VariantAnnotation$"'
+    not_if "ls #{Dir.home(username)}/R-libs| grep -q '^VariantAnnotation$'"
 end
 
 # ensemblVEP deps
@@ -205,7 +213,7 @@ end
 
 ruby_block "set up VEP" do
     block do
-        maxVep = `echo "cat(unname(unlist(ensemblVEP::currentVEP())))"|R --slave`
+        maxVep = `echo "cat(unname(unlist(ensemblVEP::currentVEP())))"|R_LIBS_USER=#{Dir.home(username)}/R-libs R --slave --vanilla`
         vepUrl = "https://codeload.github.com/Ensembl/ensembl-tools/zip/release/#{maxVep}"
         vepZip = "ensembl-tools-release-#{maxVep}.zip"
         vepDir = vepZip.sub(".zip", "")
@@ -314,7 +322,7 @@ end
 # install rstudio server
 
 
-%w(gdebi-core libapparmor1).each do |pkg|
+%w(gdebi-core).each do |pkg|
     package pkg do
         action :install
     end
@@ -483,33 +491,6 @@ if on_ec2
         end
     end
 
-    # s2r = "/usr/lib/rstudio-server/bin/rsession/* ux"
-    # s2a = "     /usr/local/bin/setup_r_mpi.sh* ux,"
-    # execute "modify apparmor config" do
-    #     command %Q(mv rstudio-server rstudio-server.old && ruby -pe 'gsub("#{s2r}", "#{s2r}\n#{s2a}")' > rstudio-server && rm rstudio-server.old)
-    #     #command %Q(sed -i'' '\/usr\/lib\/rstudio-server\/bin\/rsession\* ux/a \\n     /usr/local/bin/setup_r_mpi.sh* ux,' rstudio-server)
-    #     cwd "/etc/apparmor.d"
-    #     user "root"
-    #     not_if "grep -q setup_r_mpi /etc/apparmor.d/rstudio-server"
-    # end
-
-    file "/etc/apparmor.d/rstudio-server" do
-        action :delete
-    end
-
-    remote_file "/etc/apparmor.d/rstudio-server" do
-        owner "root"
-        group "root"
-        source "file:///vagrant/rstudio-server"
-        action :create_if_missing
-        mode "0644"
-    end
-
-
-    execute "restart apparmor" do
-        command "invoke-rc.d apparmor reload"
-        user "root"
-    end
 
     execute "switch rstudio-server to port 80" do
         user "root"
@@ -557,6 +538,13 @@ remote_file "/usr/local/bin/clean_ami" do
     source "file:///vagrant/clean_ami"
 end
 
+remote_file "/home/ubuntu/.Rprofile" do
+    action :create
+    owner username
+    group username
+    mode "0755"
+    source "file:///vagrant/.Rprofile"
+end
 
 
 remote_file "/etc/update-motd.d/999-bioc-phone-home" do
@@ -567,13 +555,6 @@ remote_file "/etc/update-motd.d/999-bioc-phone-home" do
     source "file:///vagrant/999-bioc-phone-home"
 end
 
-remote_file "/home/ubuntu/.Rprofile" do
-    action :create
-    owner username
-    group username
-    mode "0755"
-    source "file:///vagrant/.Rprofile"
-end
 
 remote_file "/etc/init/phone-home.conf" do
     action :create
@@ -583,6 +564,35 @@ remote_file "/etc/init/phone-home.conf" do
     source "file:///vagrant/phone-home.conf"
 end
 
+
+package "python-pip" do
+    :install
+end
+
+execute "install awscli" do
+    command "pip install -U awscli"
+    not_if "pip list|grep -q awscli"
+end
+
+execute "install docker" do
+    command "wget -qO- https://get.docker.com/ | sh"
+    not_if "dpkg --get-selections|grep -q docker"
+end
+
+execute "configure docker so no sudo required" do
+    command "usermod -aG docker ubuntu"
+    # should be ok to not-guard this....
+end
+
+execute "modify shellinabox config" do
+    command "sed -i.bak 's/--no-beep/--no-beep --disable-ssl/' /etc/default/shellinabox"
+    not_if "grep -q disable-ssl /etc/default/shellinabox"
+end
+
+execute "restart shellinabox" do
+    command "invoke-rc.d shellinabox restart"
+    # not sure how to guard this, nbd....
+end
 
 execute "clean_ami" do
     command "/usr/local/bin/clean_ami > /dev/null 2>&1"
