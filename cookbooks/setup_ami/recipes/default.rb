@@ -51,7 +51,7 @@ on_ec2 = true
 # if we're NOT on ec2...
 res = `curl -s http://169.254.169.254/latest/meta-data/`
 if res.empty?
-    on ec2 = false
+    on_ec2 = false
 end
 
 ## end config, start doing stuff 
