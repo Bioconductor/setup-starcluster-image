@@ -179,6 +179,11 @@ end
     end
 end
 
+execute "install BatchJobs in default lib tree"
+    command "R --vanilla -e 'install.packages(\"BatchJobs\", repos=\"http://cran.rstudio.com/\")' "
+    user "root"
+    not_if {File.exists? "/usr/local/lib/R/library/BatchJobs"}
+end
 
 directory "#{Dir.home(username)}/R-libs" do
   owner username
